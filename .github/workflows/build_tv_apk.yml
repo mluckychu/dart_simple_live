@@ -14,6 +14,7 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
+      actions: write
 
     steps:
       - name: Checkout code
@@ -44,7 +45,7 @@ jobs:
           cd simple_live_tv_app
           flutter build apk --release --split-per-abi
 
-      - name: Upload APKs
+      - name: Upload APKs as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-tv-apk
@@ -54,13 +55,32 @@ jobs:
             simple_live_tv_app/build/app/outputs/flutter-apk/app-x86_64-release.apk
           retention-days: 7
 
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: android-tv-apk
+          path: ./apks
+
+      - name: List downloaded files
+        run: |
+          ls -la ./apks/
+
       - name: Create Release
         if: success()
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: build-tv-${{ github.run_number }}
-          name: Android TV Build #${{ github.run_number }}
+          tag_name: tv-latest
+          name: Android TV Latest Build
+          body: |
+            Android TV APK Build
+            
+            Build Number: ${{ github.run_number }}
+            Branch: ${{ github.event.inputs.branch }}
+            
+            Download the APK files below.
           files: |
-            simple_live_tv_app/build/app/outputs/flutter-apk/*.apk
+            ./apks/*.apk
           draft: false
-          prerelease: true
+          prerelease: false
