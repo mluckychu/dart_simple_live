@@ -40,19 +40,16 @@ jobs:
           cd simple_live_tv_app
           flutter pub get
 
-      - name: Build APK (unsigned)
+      - name: Build APK (debug signed, universal)
         run: |
           cd simple_live_tv_app
-          flutter build apk --release --split-per-abi
+          flutter build apk --debug
 
-      - name: Upload APKs as Artifact
+      - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-tv-apk
-          path: |
-            simple_live_tv_app/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-            simple_live_tv_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-            simple_live_tv_app/build/app/outputs/flutter-apk/app-x86_64-release.apk
+          path: simple_live_tv_app/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 7
 
       - name: Download Artifact
@@ -62,8 +59,7 @@ jobs:
           path: ./apks
 
       - name: List downloaded files
-        run: |
-          ls -la ./apks/
+        run: ls -la ./apks/
 
       - name: Create Release
         if: success()
@@ -74,13 +70,10 @@ jobs:
           tag_name: tv-latest
           name: Android TV Latest Build
           body: |
-            Android TV APK Build
-            
+            Android TV APK（debug 签名，可直接安装）
+
             Build Number: ${{ github.run_number }}
             Branch: ${{ github.event.inputs.branch }}
-            
-            Download the APK files below.
-          files: |
-            ./apks/*.apk
+          files: ./apks/app-debug.apk
           draft: false
           prerelease: false
